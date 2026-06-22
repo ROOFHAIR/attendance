@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ระบบลงเวลาเข้า-ออก | ROOFHAIR</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      background: #1a1a2e;
+      color: white;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 { font-size: 1.2rem; font-weight: 600; }
+    header span { font-size: 0.85rem; opacity: 0.7; }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      margin: 32px 16px 16px;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      color: #1a1a2e;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: border 0.2s;
+      outline: none;
+    }
+    input[type="text"]:focus { border-color: #4f46e5; }
+
+    .field { margin-bottom: 20px; }
+
+    /* Camera area */
+    .camera-area {
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      background: #f8fafc;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .camera-area video {
+      width: 100%;
+      display: none;
+      border-radius: 10px;
+    }
+    .camera-area canvas { display: none; }
+    .camera-area img {
+      width: 100%;
+      border-radius: 10px;
+      display: none;
+    }
+    .camera-placeholder {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 20px;
+    }
+    .camera-placeholder svg {
+      display: block;
+      margin: 0 auto 8px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-cam   { background: #e0e7ff; color: #4f46e5; }
+    .btn-cap   { background: #4f46e5; color: white; }
+    .btn-retry { background: #fee2e2; color: #ef4444; }
+
+    .btn-cam:hover   { background: #c7d2fe; }
+    .btn-cap:hover   { background: #4338ca; }
+    .btn-retry:hover { background: #fecaca; }
+
+    .upload-alt {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-align: center;
+      margin-top: 6px;
+    }
+    .upload-alt label {
+      color: #4f46e5;
+      cursor: pointer;
+      font-weight: 600;
+      display: inline;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: #1a1a2e;
+      color: white;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-top: 8px;
+      letter-spacing: 0.5px;
+    }
+    .btn-submit:hover { background: #16213e; }
+    .btn-submit:disabled { background: #94a3b8; cursor: not-allowed; }
+
+    .status-msg {
+      margin-top: 14px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      text-align: center;
+      display: none;
+    }
+    .status-msg.success { background: #dcfce7; color: #16a34a; display: block; }
+    .status-msg.error   { background: #fee2e2; color: #dc2626; display: block; }
+    .status-msg.loading { background: #e0e7ff; color: #4f46e5; display: block; }
+
+    .timestamp-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      color: #475569;
+      margin-bottom: 20px;
+    }
+    .timestamp-box strong { color: #1a1a2e; }
+
+    /* History table */
+    .history-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      padding: 24px;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 16px 32px;
+    }
+    .history-card h2 {
+      font-size: 1rem;
+      color: #1a1a2e;
+      margin-bottom: 16px;
+    }
+    #historyBody tr:hover { background: #f8fafc; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th { text-align: left; padding: 8px 10px; color: #94a3b8; font-weight: 600; border-bottom: 2px solid #f1f5f9; }
+    td { padding: 10px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+    td img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+    .empty-row td { text-align: center; color: #94a3b8; padding: 24px; }
+
+    /* config warning */
+    .config-warning {
+      background: #fef9c3;
+      border: 1px solid #fde047;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      color: #854d0e;
+      margin-bottom: 20px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>✂️ ROOFHAIR — ระบบลงเวลา</h1>
+    <span>บันทึกการเข้า-ออกงานประจำวัน</span>
+  </div>
+</header>
+
+<div class="card">
+  <h2>📋 กรอกข้อมูลลงเวลา</h2>
+
+  <div class="config-warning" id="configWarning">
+    ⚠️ ยังไม่ได้ตั้งค่า Apps Script URL — โปรดแก้ไข <code>APPS_SCRIPT_URL</code> ในไฟล์นี้
+  </div>
+
+  <div class="timestamp-box">
+    🕐 เวลาปัจจุบัน: <strong id="liveTime">—</strong>
+  </div>
+
+  <div class="field">
+    <label for="nameInput">ชื่อ-นามสกุล *</label>
+    <input type="text" id="nameInput" placeholder="เช่น สมชาย ใจดี" autocomplete="off" />
+  </div>
+
+  <div class="field">
+    <label>รูปถ่าย *</label>
+    <div class="camera-area" id="cameraArea">
+      <video id="video" autoplay playsinline></video>
+      <canvas id="canvas"></canvas>
+      <img id="preview" alt="รูปถ่าย" />
+      <div class="camera-placeholder" id="placeholder">
+        <svg width="40" height="40" fill="none" stroke="#cbd5e1" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+        กดปุ่มด้านล่างเพื่อเปิดกล้อง
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-cam" id="btnStartCam" onclick="startCamera()">📷 เปิดกล้อง</button>
+      <button class="btn-cap" id="btnCapture" onclick="capture()" style="display:none">✅ ถ่ายรูป</button>
+      <button class="btn-retry" id="btnRetry" onclick="retry()" style="display:none">🔄 ถ่ายใหม่</button>
+    </div>
+    <div class="upload-alt">หรือ <label for="fileInput">อัปโหลดรูปภาพ</label></div>
+    <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFile(event)" />
+  </div>
+
+  <button class="btn-submit" id="btnSubmit" onclick="submit()">📤 บันทึกลงเวลา</button>
+  <div class="status-msg" id="statusMsg"></div>
+</div>
+
+<div class="history-card">
+  <h2>📅 ประวัติการลงเวลาวันนี้</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>รูป</th>
+        <th>ชื่อ</th>
+        <th>เวลา</th>
+      </tr>
+    </thead>
+    <tbody id="historyBody">
+      <tr class="empty-row"><td colspan="3">ยังไม่มีข้อมูล</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  // ============================================================
+  // ⚙️ ตั้งค่า: วาง URL ของ Google Apps Script Web App ตรงนี้
+  // ============================================================
+  const APPS_SCRIPT_URL = 'https://script.google.com/a/macros/roofhairsalon.com/s/AKfycbwfi5X9V82KfATyL4gR-CYop9PFTsCXvBcA9f4z3VA05NbTnb-JTMcRsyMfuXbWTLHkbA/exec';
+  // ============================================================
+
+  let photoBase64 = null;
+  let stream = null;
+
+  // Show warning if not configured
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    document.getElementById('configWarning').style.display = 'block';
+  }
+
+  // Live clock
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('liveTime').textContent = now.toLocaleString('th-TH', {
+      weekday: 'long', year: 'numeric', month: 'long',
+      day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Camera
+  async function startCamera() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      const video = document.getElementById('video');
+      video.srcObject = stream;
+      video.style.display = 'block';
+      document.getElementById('placeholder').style.display = 'none';
+      document.getElementById('btnStartCam').style.display = 'none';
+      document.getElementById('btnCapture').style.display = 'inline-block';
+    } catch (e) {
+      alert('ไม่สามารถเปิดกล้องได้: ' + e.message + '\nลองอัปโหลดรูปภาพแทน');
+    }
+  }
+
+  function capture() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    canvas.width = 320;
+    canvas.height = 240;
+    canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
+    photoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+    // Stop stream
+    if (stream) stream.getTracks().forEach(t => t.stop());
+
+    // Show preview
+    const img = document.getElementById('preview');
+    img.src = photoBase64;
+    img.style.display = 'block';
+    video.style.display = 'none';
+
+    document.getElementById('btnCapture').style.display = 'none';
+    document.getElementById('btnRetry').style.display = 'inline-block';
+  }
+
+  function retry() {
+    photoBase64 = null;
+    document.getElementById('preview').style.display = 'none';
+    document.getElementById('preview').src = '';
+    document.getElementById('placeholder').style.display = 'flex';
+    document.getElementById('btnRetry').style.display = 'none';
+    document.getElementById('btnStartCam').style.display = 'inline-block';
+  }
+
+  function handleFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      // Resize via canvas
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.getElementById('canvas');
+        const maxW = 320, maxH = 240;
+        let w = img.width, h = img.height;
+        if (w > maxW) { h = h * maxW / w; w = maxW; }
+        if (h > maxH) { w = w * maxH / h; h = maxH; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        photoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+        const preview = document.getElementById('preview');
+        preview.src = photoBase64;
+        preview.style.display = 'block';
+        document.getElementById('placeholder').style.display = 'none';
+        document.getElementById('btnStartCam').style.display = 'none';
+        document.getElementById('btnRetry').style.display = 'inline-block';
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Submit
+  async function submit() {
+    const name = document.getElementById('nameInput').value.trim();
+    const msg = document.getElementById('statusMsg');
+    const btn = document.getElementById('btnSubmit');
+
+    if (!name) { showMsg('กรุณากรอกชื่อ-นามสกุล', 'error'); return; }
+    if (!photoBase64) { showMsg('กรุณาถ่ายรูปหรืออัปโหลดรูปภาพ', 'error'); return; }
+    if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+      showMsg('ยังไม่ได้ตั้งค่า Apps Script URL', 'error'); return;
+    }
+
+    btn.disabled = true;
+    showMsg('⏳ กำลังบันทึกข้อมูล...', 'loading');
+
+    const timestamp = new Date().toLocaleString('th-TH', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+
+    const payload = { name, photo: photoBase64, timestamp };
+
+    try {
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        showMsg('✅ บันทึกเรียบร้อยแล้ว!', 'success');
+        addToHistory(name, photoBase64, timestamp);
+        // Reset form
+        document.getElementById('nameInput').value = '';
+        retry();
+      } else {
+        throw new Error(data.message || 'เกิดข้อผิดพลาด');
+      }
+    } catch (e) {
+      showMsg('❌ บันทึกไม่สำเร็จ: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function showMsg(text, type) {
+    const el = document.getElementById('statusMsg');
+    el.textContent = text;
+    el.className = 'status-msg ' + type;
+  }
+
+  function addToHistory(name, photo, time) {
+    const tbody = document.getElementById('historyBody');
+    // Remove empty row
+    const empty = tbody.querySelector('.empty-row');
+    if (empty) empty.remove();
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><img src="${photo}" alt="${name}" /></td>
+      <td>${name}</td>
+      <td>${time}</td>
+    `;
+    tbody.prepend(tr);
+  }
+</script>
+</body>
+</html>
